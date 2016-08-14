@@ -1,0 +1,29 @@
+-- this is a comment
+-- header
+
+param a,b -- this file takes exactly two command-line arguments
+
+var foo,bar -- all variables must be declared at the top
+
+-- body
+
+a = a * (2 + b) -- parameters can act like variables too
+bar = a + 3
+
+print a -- prints a number, followed by a newline
+
+if bar == bar then -- if statements must have a numeric comparison
+  print bar -- indentation is optional, but recommended
+end -- blocks are closed by `end`
+
+print foo -- variables are initialized to zero
+
+foo = bar + b
+
+print foo
+
+bar = 5
+while bar > 0 then -- we have `while` loops
+  print bar
+  bar = bar - 1
+end
