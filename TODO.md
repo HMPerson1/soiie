@@ -1,5 +1,8 @@
 - [X] Lexer
+- [X] AST
+- [X] Parser
+- [ ] Pretty-printer
 - [ ] Tests
-- [ ] AST
-- [ ] Parser
 - [ ] LLVM Codegen
+- [ ] Lexer/parser fusion
+- [ ] Better error messages
