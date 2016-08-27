@@ -18,11 +18,16 @@ library
   exposed-modules:     Language.Soiie.Lexer
                      , Language.Soiie.Parser
                      , Language.Soiie.AST
+                     , Language.Soiie.Codegen
+                     , Language.Soiie.Emit
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , array
                      , recursion-schemes
                      , containers
+                     , llvm-general-pure
+                     , mtl
+                     , lens
   build-tools:         alex, happy
   default-language:    Haskell2010
 
@@ -33,6 +38,8 @@ executable soiie-exe
   build-depends:       base
                      , soiie
                      , bytestring
+                     , llvm-general
+                     , mtl
   default-language:    Haskell2010
 
 test-suite soiie-test
