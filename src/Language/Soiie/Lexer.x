@@ -7,10 +7,8 @@ module Language.Soiie.Lexer
   )
 where
 
-import qualified Data.ByteString.Lazy.Char8 as BC
-import qualified Data.ByteString.Lazy       as B
-
-import Data.Maybe (fromJust)
+import           Data.ByteString.Lazy.Char8 (ByteString, readInteger, unpack)
+import           Data.Maybe                 (fromJust)
 }
 
 %wrapper "posn-bytestring"
@@ -40,15 +38,15 @@ tokens :-
   ">="               { tok TokGE }
   "<="               { tok TokLE }
   "=="               { tok TokEQ }
-  [a-z][a-z0-9]*     { tokRaw (TokVarId . BC.unpack) }
-  [0-9]              { tokRaw (TokInt . fst . fromJust . BC.readInt) }
+  [a-z][a-z0-9]*     { tokRaw (TokVarId . unpack) }
+  [0-9]              { tokRaw (TokInt . fst . fromJust . readInteger) }
 
 {
-tokRaw :: (B.ByteString -> TokenClass) -> AlexPosn -> B.ByteString -> Token
+tokRaw :: (ByteString -> TokenClass) -> AlexPosn -> ByteString -> Token
 tokRaw f pos bs = Token pos (f bs)
 tok = tokRaw . const
 
-scan :: B.ByteString -> [Token]
+scan :: ByteString -> [Token]
 scan = alexScanTokens
 
 data Token = Token AlexPosn TokenClass
@@ -75,7 +73,7 @@ data TokenClass = TokNewline
                 | TokGE
                 | TokLE
                 | TokEQ
-                | TokInt        Int
+                | TokInt        Integer
                 | TokVarId      String
   deriving (Show)
 }

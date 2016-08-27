@@ -4,14 +4,17 @@ module Language.Soiie.Parser
   )
 where
 
+import           Data.Sequence        (Seq, empty, singleton, (|>))
+
 import           Language.Soiie.AST
-import           Language.Soiie.Lexer (AlexPosn(..), Token(..), TokenClass(..))
+import           Language.Soiie.Lexer (AlexPosn (..), Token (..),
+                                       TokenClass (..))
 }
 
 %token
   NL            { Token _ TokNewline }
   'param'       { Token _ TokParam }
-  'var'         { Token _ TokVar}
+  'var'         { Token _ TokVar }
   'if'          { Token _ TokIf }
   'while'       { Token _ TokWhile }
   'then'        { Token _ TokThen }
@@ -46,33 +49,33 @@ file :: { File }
         | file1                         { $1 }
 
 file1 :: { File }
-        : maybe_params maybe_vars stmts { File $1 $2 (reverse $3) }
+        : maybe_params maybe_vars stmts { File $1 $2 $3 }
 
-maybe_params :: { [VarId] }
-        : 'param' vardecls NL           { reverse $2 }
-        | {- empty -}                   { [] }
+maybe_params :: { Seq VarId }
+        : 'param' vardecls NL           { $2 }
+        | {- empty -}                   { empty }
 
-maybe_vars :: { [VarId] }
+maybe_vars :: { Seq VarId }
         : 'var' vardecls NL             { $2 }
-        | {- empty -}                   { [] }
+        | {- empty -}                   { empty }
 
-vardecls :: { [VarId] }
-        : vardecls ',' varid            { $3 : $1 }
+vardecls :: { Seq VarId }
+        : vardecls ',' varid            { $1 |> $3 }
         | vardecls ','                  { $1 }
-        | varid                         { [$1] }
+        | varid                         { singleton $1 }
 
 varid :: { VarId }
         : VAR                           { VarId $1 }
 
-stmts :: { [Stmt] }
-        : stmts stmt                    { $2 : $1 }
-        | stmt                          { [$1] }
+stmts :: { Seq Stmt }
+        : stmts stmt                    { $1 |> $2 }
+        | stmt                          { singleton $1 }
 
 stmt :: { Stmt }
-        : varid '=' exp NL              { Assign $1 $3 }
-        | 'print' exp NL                { Print $2 }
-        | 'if' cond block               { If $2 $3 }
-        | 'while' cond block            { While $2 $3 }
+        : varid '=' exp NL              { sAssign $1 $3 }
+        | 'print' exp NL                { sPrint $2 }
+        | 'if' cond block               { sIf $2 $3 }
+        | 'while' cond block            { sWhile $2 $3 }
 
 cond :: { Cond }
         : exp cmp exp                   { Cond $1 $2 $3 }
@@ -84,16 +87,16 @@ cmp :: { Cmp }
         | '<='                          { CmpLE }
         | '=='                          { CmpEQ }
 
-block :: { [Stmt] }
-        : 'then' NL stmts 'end' NL      { reverse $3 }
+block :: { Seq Stmt }
+        : 'then' NL stmts 'end' NL      { $3 }
 
 exp :: { Exp }
-        : exp '+' exp                   { Plus $1 $3}
-        | exp '-' exp                   { Minus $1 $3}
-        | exp '*' exp                   { Times $1 $3 }
-        | exp '/' exp                   { Div $1 $3 }
-        | INT                           { Int $1 }
-        | varid                         { VarRef $1 }
+        : exp '+' exp                   { ePlus $1 $3 }
+        | exp '-' exp                   { eMinus $1 $3 }
+        | exp '*' exp                   { eTimes $1 $3 }
+        | exp '/' exp                   { eDiv $1 $3 }
+        | INT                           { eInt $1 }
+        | varid                         { eVarRef $1 }
         | '(' exp ')'                   { $2 }
 
 {
