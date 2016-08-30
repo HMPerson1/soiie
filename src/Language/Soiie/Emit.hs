@@ -93,7 +93,7 @@ emitStmt = cata $ \case
       doBlkNm   <- uniqueName (Just "while.do")
       endBlkNm  <- uniqueName (Just "while.end")
       emitCondBlk condBlkNm cond doBlkNm endBlkNm
-      emitNewBlock doBlkNm stmts endBlkNm
+      emitNewBlock doBlkNm stmts condBlkNm
       addNewBlock endBlkNm
 
 emitCondBlk :: Name -> Cond -> Name -> Name -> Codegen ()
@@ -141,6 +141,7 @@ emitExp = cata $ \case
 get_params :: Operand
 get_params = gblRef (FunctionType VoidType [i32, ptrTo (ptrTo i8), ptrTo i64] False)
                     (Name "get_params")
+
 print :: Operand
 print = gblRef (FunctionType VoidType [i64] False) (Name "print")
 
