@@ -25,9 +25,10 @@ import           LLVM.General.AST.IntegerPredicate
 import           Language.Soiie.AST
 import           Language.Soiie.Codegen
 
-emit :: File -> Module
-emit f@File {..} = defaultModule
-  { moduleDefinitions =
+emit :: String -> File -> Module
+emit modName f@File {..} = defaultModule
+  { moduleName = modName
+  , moduleDefinitions =
     GlobalDefinition (emitMain f) : moduleHeaders (fromIntegral (length fileParams))
   }
 
