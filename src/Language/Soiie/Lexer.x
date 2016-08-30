@@ -43,7 +43,7 @@ tokens :-
   ">"                { tok TokGT }
   ">="               { tok TokGE }
   [a-z][a-z0-9]*     { tokRaw (TokVarId . unpack) }
-  [0-9]              { tokRaw (TokInt . fst . fromJust . readInteger) }
+  [0-9]+             { tokRaw (TokInt . fst . fromJust . readInteger) }
 
 {
 tokRaw :: (ByteString -> TokenClass) -> AlexPosn -> ByteString -> Token
