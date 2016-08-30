@@ -117,6 +117,12 @@ mul op1 op2 = instr i64 (Mul False False op1 op2 [])
 div :: Operand -> Operand -> Codegen Operand
 div op1 op2 = instr i64 (SDiv False op1 op2 [])
 
+rem :: Operand -> Operand -> Codegen Operand
+rem op1 op2 = instr i64 (SRem op1 op2 [])
+
+neg :: Operand -> Codegen Operand
+neg = sub (iconst 0)
+
 icmp :: IntegerPredicate -> Operand -> Operand -> Codegen Operand
 icmp ip op1 op2 = instr i1 (ICmp ip op1 op2 [])
 

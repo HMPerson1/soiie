@@ -21,8 +21,10 @@ tokens :-
   "param"            { tok TokParam }
   "var"              { tok TokVar }
   "if"               { tok TokIf }
-  "while"            { tok TokWhile }
   "then"             { tok TokThen }
+  "else"             { tok TokElse }
+  "while"            { tok TokWhile }
+  "do"               { tok TokDo }
   "end"              { tok TokEnd }
   "print"            { tok TokPrint }
   ","                { tok TokComma }
@@ -33,11 +35,13 @@ tokens :-
   "-"                { tok TokMinus }
   "*"                { tok TokTimes }
   "/"                { tok TokDivide }
-  ">"                { tok TokGT }
-  "<"                { tok TokLT }
-  ">="               { tok TokGE }
-  "<="               { tok TokLE }
+  "%"                { tok TokRem }
   "=="               { tok TokEQ }
+  "!="               { tok TokNE }
+  "<"                { tok TokLT }
+  "<="               { tok TokLE }
+  ">"                { tok TokGT }
+  ">="               { tok TokGE }
   [a-z][a-z0-9]*     { tokRaw (TokVarId . unpack) }
   [0-9]              { tokRaw (TokInt . fst . fromJust . readInteger) }
 
@@ -56,23 +60,27 @@ data TokenClass = TokNewline
                 | TokParam
                 | TokVar
                 | TokIf
-                | TokWhile
                 | TokThen
+                | TokElse
+                | TokWhile
+                | TokDo
                 | TokEnd
                 | TokPrint
+                | TokComma
                 | TokParenOpen
                 | TokParenClose
-                | TokComma
                 | TokAssign
                 | TokPlus
                 | TokMinus
                 | TokTimes
                 | TokDivide
-                | TokGT
-                | TokLT
-                | TokGE
-                | TokLE
+                | TokRem
                 | TokEQ
+                | TokNE
+                | TokLT
+                | TokLE
+                | TokGT
+                | TokGE
                 | TokInt        Integer
                 | TokVarId      String
   deriving (Show)

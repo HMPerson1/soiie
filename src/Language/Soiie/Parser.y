@@ -16,8 +16,10 @@ import           Language.Soiie.Lexer (AlexPosn (..), Token (..),
   'param'       { Token _ TokParam }
   'var'         { Token _ TokVar }
   'if'          { Token _ TokIf }
-  'while'       { Token _ TokWhile }
   'then'        { Token _ TokThen }
+  'else'        { Token _ TokElse }
+  'while'       { Token _ TokWhile }
+  'do'          { Token _ TokDo }
   'end'         { Token _ TokEnd }
   'print'       { Token _ TokPrint }
   ','           { Token _ TokComma }
@@ -28,11 +30,13 @@ import           Language.Soiie.Lexer (AlexPosn (..), Token (..),
   '-'           { Token _ TokMinus }
   '*'           { Token _ TokTimes }
   '/'           { Token _ TokDivide }
-  '>'           { Token _ TokGT }
-  '<'           { Token _ TokLT }
-  '>='          { Token _ TokGE }
-  '<='          { Token _ TokLE }
+  '%'           { Token _ TokRem }
   '=='          { Token _ TokEQ }
+  '!='          { Token _ TokNE }
+  '<'           { Token _ TokLT }
+  '<='          { Token _ TokLE }
+  '>'           { Token _ TokGT }
+  '>='          { Token _ TokGE }
   VAR           { Token _ (TokVarId $$) }
   INT           { Token _ (TokInt $$) }
 
@@ -41,7 +45,8 @@ import           Language.Soiie.Lexer (AlexPosn (..), Token (..),
 %name parseFile file
 
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
+%left NEG
 %%
 
 file :: { File }
@@ -64,9 +69,6 @@ vardecls :: { Seq VarId }
         | vardecls ','                  { $1 }
         | varid                         { singleton $1 }
 
-varid :: { VarId }
-        : VAR                           { VarId $1 }
-
 stmts :: { Seq Stmt }
         : stmts stmt                    { $1 |> $2 }
         | stmt                          { singleton $1 }
@@ -74,30 +76,47 @@ stmts :: { Seq Stmt }
 stmt :: { Stmt }
         : varid '=' exp NL              { sAssign $1 $3 }
         | 'print' exp NL                { sPrint $2 }
-        | 'if' cond block               { sIf $2 $3 }
-        | 'while' cond block            { sWhile $2 $3 }
+        | if_stmt                       { $1 }
+        | 'while' cond d_block          { sWhile $2 $3 }
+
+if_stmt :: { Stmt }
+        : 'if' cond t_block e_block     { sIf $2 $3 $4 }
+        | 'if' cond t_block 'end' NL    { sIf $2 $3 empty }
+
+t_block :: { Seq Stmt }
+        : 'then' NL stmts               { $3 }
+
+e_block :: { Seq Stmt }
+        : 'else' NL stmts 'end' NL      { $3 }
+        | 'else' if_stmt                { singleton $2 }
+
+d_block :: { Seq Stmt }
+        : 'do' NL stmts 'end' NL        { $3 }
 
 cond :: { Cond }
         : exp cmp exp                   { Cond $1 $2 $3 }
 
 cmp :: { Cmp }
-        : '>'                           { CmpGT }
+        : '=='                          { CmpEQ }
+        | '!='                          { CmpNE }
         | '<'                           { CmpLT }
-        | '>='                          { CmpGE }
         | '<='                          { CmpLE }
-        | '=='                          { CmpEQ }
-
-block :: { Seq Stmt }
-        : 'then' NL stmts 'end' NL      { $3 }
+        | '>'                           { CmpGT }
+        | '>='                          { CmpGE }
 
 exp :: { Exp }
         : exp '+' exp                   { ePlus $1 $3 }
         | exp '-' exp                   { eMinus $1 $3 }
         | exp '*' exp                   { eTimes $1 $3 }
         | exp '/' exp                   { eDiv $1 $3 }
+        | exp '%' exp                   { eRem $1 $3 }
+        | '-' exp %prec NEG             { eNeg $2 }
         | INT                           { eInt $1 }
         | varid                         { eVarRef $1 }
         | '(' exp ')'                   { $2 }
+
+varid :: { VarId }
+        : VAR                           { VarId $1 }
 
 {
 happyError a = error ("Parse error near " ++ (case a of (Token (AlexPn _ l c) _ :_) -> '(' : show l ++ ':' : show c ++ ")"; [] -> "end of file"))

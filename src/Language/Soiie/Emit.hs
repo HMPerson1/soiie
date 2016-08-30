@@ -6,12 +6,12 @@ module Language.Soiie.Emit
     ) where
 
 import           Prelude                            hiding (EQ, div, exp,
-                                                     length, print)
+                                                     length, print, rem)
 
 import           Control.Monad                      (forM_, join, void)
 import           Data.Foldable                      (toList)
 import           Data.Functor.Foldable              (cata)
-import           Data.Sequence                      (length)
+import           Data.Sequence                      (Seq, length)
 
 import qualified LLVM.General.AST.Constant          as C
 import qualified LLVM.General.AST.FunctionAttribute as FA
@@ -75,42 +75,53 @@ emitMainBody File {..} = genBlocks . execCodegen $ emitHeader >> emitBody >> emi
 
 emitStmt :: Stmt -> Codegen ()
 emitStmt = cata $ \case
-  Assign (VarId var) exp   -> join (store <$> lookupVar var <*> emitExp exp)
-  Print  exp               -> join (void . call T.void print <$> mapM emitExp [exp])
-  If     cond        stmts ->
+  Assign (VarId var) exp    -> join (store <$> lookupVar var <*> emitExp exp)
+  Print  exp                -> join (void . call T.void print <$> mapM emitExp [exp])
+  If     cond tStmts eStmts ->
     do
+      condBlkNm <- uniqueName (Just "if.cond")
       thenBlkNm <- uniqueName (Just "if.then")
+      elseBlkNm <- uniqueName (Just "if.else")
       endBlkNm  <- uniqueName (Just "if.end")
-      condOp <- emitCond cond
-      setTerm (Do (CondBr condOp thenBlkNm endBlkNm []))
-      addNewBlock thenBlkNm
-      _ <- sequence stmts
-      setTerm (Do (Br endBlkNm []))
+      emitCondBlk condBlkNm cond thenBlkNm elseBlkNm
+      emitNewBlock thenBlkNm tStmts endBlkNm
+      emitNewBlock elseBlkNm eStmts endBlkNm
       addNewBlock endBlkNm
-  While  cond         stmts ->
+  While  cond stmts         ->
     do
       condBlkNm <- uniqueName (Just "while.cond")
       doBlkNm   <- uniqueName (Just "while.do")
       endBlkNm  <- uniqueName (Just "while.end")
-      setTerm (Do (Br condBlkNm []))
-      addNewBlock condBlkNm
-      condOp <- emitCond cond
-      setTerm (Do (CondBr condOp doBlkNm endBlkNm []))
-      addNewBlock doBlkNm
-      _ <- sequence stmts
-      setTerm (Do (Br condBlkNm []))
+      emitCondBlk condBlkNm cond doBlkNm endBlkNm
+      emitNewBlock doBlkNm stmts endBlkNm
       addNewBlock endBlkNm
+
+emitCondBlk :: Name -> Cond -> Name -> Name -> Codegen ()
+emitCondBlk condBlkNm cond trueBlkNm falseBlkNm =
+  do
+    setTerm (Do (Br condBlkNm []))
+    addNewBlock condBlkNm
+    condOp <- emitCond cond
+    setTerm (Do (CondBr condOp trueBlkNm falseBlkNm []))
+
+emitNewBlock :: Name -> Seq (Codegen ()) -> Name -> Codegen ()
+emitNewBlock blockNm stmts nextBlkNm =
+  do
+    addNewBlock blockNm
+    sequence_ stmts
+    setTerm (Do (Br nextBlkNm []))
 
 emitCond :: Cond -> Codegen Operand
 emitCond (Cond e1 cmp e2) = join (icmp ip <$> emitExp e1 <*> emitExp e2)
   where
     ip :: IntegerPredicate
     ip = case cmp of
-      CmpGT -> SGT
-      CmpLT -> SLT
-      CmpGE -> SGE
-      CmpLE -> SLE
       CmpEQ -> EQ
+      CmpNE -> NE
+      CmpLT -> SLT
+      CmpLE -> SLE
+      CmpGT -> SGT
+      CmpGE -> SGE
 
 emitExp :: Exp -> Codegen Operand
 emitExp = cata $ \case
@@ -118,6 +129,8 @@ emitExp = cata $ \case
   Minus  e1 e2       -> join (sub <$> e1 <*> e2)
   Times  e1 e2       -> join (mul <$> e1 <*> e2)
   Div    e1 e2       -> join (div <$> e1 <*> e2)
+  Rem    e1 e2       -> join (rem <$> e1 <*> e2)
+  Neg    e           -> join (neg <$> e)
   Int    i           -> return (iconst i)
   VarRef (VarId var) -> join (load <$> lookupVar var)
 

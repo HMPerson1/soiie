@@ -16,14 +16,26 @@ if bar == bar then -- if statements must have a numeric comparison
   print bar -- indentation is optional, but recommended
 end -- blocks are closed by `end`
 
+if b == 0 then
+  print 0
+else
+  if b < 5 then
+    print 1
+  else if b == 5 then
+    print 5
+  else
+    print -1
+  end
+end
+
 print foo -- variables are initialized to zero
 
 foo = bar + b
 
-print foo
+print foo % 23
 
 bar = 5
-while bar > 0 then -- we have `while` loops
-  print bar
+while bar > 0 do -- we have `while` loops
+  print -bar
   bar = bar - 1
 end
