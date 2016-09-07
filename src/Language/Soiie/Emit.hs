@@ -23,7 +23,7 @@ import           LLVM.General.AST
 import           LLVM.General.AST.IntegerPredicate
 
 import           Language.Soiie.AST
-import           Language.Soiie.Codegen
+import           Language.Soiie.Internal.Codegen
 
 emit :: String -> File -> Module
 emit modName f@File {..} = defaultModule

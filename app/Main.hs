@@ -14,9 +14,8 @@ import qualified Control.Monad.LLVM        as L
 import qualified LLVM.General.PassManager  as P
 import qualified LLVM.General.Transforms   as T
 
-import           Language.Soiie.Emit       (emit)
-import           Language.Soiie.ParseMonad (runParser)
-import           Language.Soiie.Parser     (parseFile)
+import           Language.Soiie.Emit
+import           Language.Soiie.Parser
 
 main :: IO ()
 main =
@@ -28,8 +27,8 @@ main =
       _     -> do n <- getProgName; error ("usage: " ++ n ++ " FILE [LIB]")
     file <- B.readFile inFile
 
-    ast <- case runParser parseFile inFile file of
-          Left e -> error (show e)
+    ast <- case parseFile inFile file of
+          Left (ParseError e) -> error e
           Right x -> return x
     let llvmIr = emit inFile ast
 

@@ -15,12 +15,13 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Language.Soiie.Lexer
-                     , Language.Soiie.Parser
+  exposed-modules:     Language.Soiie.Parser
                      , Language.Soiie.AST
-                     , Language.Soiie.Codegen
                      , Language.Soiie.Emit
-                     , Language.Soiie.ParseMonad
+  other-modules:       Language.Soiie.Internal.ParseMonad
+                     , Language.Soiie.Internal.Lexer
+                     , Language.Soiie.Internal.Parser
+                     , Language.Soiie.Internal.Codegen
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , array

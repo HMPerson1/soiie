@@ -1,18 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Language.Soiie.ParseMonad
-    ( P
-    , ParseError (..)
-    , ParseState (..)
-    , AlexInput (..)
-    , SrcLoc (..)
-    , Token (..)
-    , TokenClass (..)
-    , advanceSrcLoc
-    , runParser
-    , lexFail
-    , parseFail
-    ) where
+module Language.Soiie.Internal.ParseMonad where
 
 import           Control.Arrow        ((&&&))
 import           Data.Bits            (shiftL, shiftR)

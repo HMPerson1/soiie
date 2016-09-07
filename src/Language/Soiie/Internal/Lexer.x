@@ -1,22 +1,22 @@
 {
 {-# LANGUAGE NamedFieldPuns #-}
 
-module Language.Soiie.Lexer
+module Language.Soiie.Internal.Lexer
   ( lexToken
   )
 where
 
-import           Prelude                    hiding (take)
+import           Prelude                            hiding (take)
 
-import           Data.ByteString.Internal   (w2c)
-import           Data.ByteString.Lazy       (ByteString, take, uncons)
-import           Data.ByteString.Lazy.Char8 (readInteger, unpack)
-import           Data.Maybe                 (fromJust)
-import           Data.Word                  (Word8)
+import           Data.ByteString.Internal           (w2c)
+import           Data.ByteString.Lazy               (ByteString, take, uncons)
+import           Data.ByteString.Lazy.Char8         (readInteger, unpack)
+import           Data.Maybe                         (fromJust)
+import           Data.Word                          (Word8)
 
 import           Control.Monad.State
 
-import           Language.Soiie.ParseMonad
+import           Language.Soiie.Internal.ParseMonad
 }
 
 $white_no_nl = $white # [\n]

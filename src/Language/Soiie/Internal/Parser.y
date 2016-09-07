@@ -1,14 +1,15 @@
 {
-module Language.Soiie.Parser
-  ( parseFile
+module Language.Soiie.Internal.Parser
+  ( parseFileP
   )
 where
 
-import           Data.Sequence             (Seq, empty, singleton, (|>))
+import           Data.Sequence                      (Seq, empty, singleton,
+                                                     (|>))
 
 import           Language.Soiie.AST
-import           Language.Soiie.Lexer
-import           Language.Soiie.ParseMonad
+import           Language.Soiie.Internal.Lexer
+import           Language.Soiie.Internal.ParseMonad
 }
 
 %token
@@ -44,7 +45,7 @@ import           Language.Soiie.ParseMonad
 %lexer { (\c -> lexToken >>= c) } { Token _ TokEof }
 %tokentype { Token }
 
-%name parseFile file
+%name parseFileP file
 
 %left '+' '-'
 %left '*' '/' '%'

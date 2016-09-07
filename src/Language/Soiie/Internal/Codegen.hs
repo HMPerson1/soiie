@@ -3,7 +3,7 @@
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
 
-module Language.Soiie.Codegen where
+module Language.Soiie.Internal.Codegen where
 
 import           Control.Lens                       (ASetter', Snoc, at,
                                                      makeLenses, use)
