@@ -1,22 +1,22 @@
 module Main where
 
-import           Control.Monad            (unless)
-import           Control.Monad.Trans      (lift)
-import qualified Data.ByteString.Lazy     as B
-import           Data.Either.Combinators  (unlessRight)
-import           System.Directory         (removeFile)
-import           System.Environment       (getArgs, getProgName)
-import           System.IO                (hClose, hPutStrLn, openTempFile,
-                                           stderr)
-import           System.Process           (callCommand)
+import           Control.Monad             (unless)
+import           Control.Monad.Trans       (lift)
+import qualified Data.ByteString.Lazy      as B
+import           Data.Either.Combinators   (unlessRight)
+import           System.Directory          (removeFile)
+import           System.Environment        (getArgs, getProgName)
+import           System.IO                 (hClose, hPutStrLn, openTempFile,
+                                            stderr)
+import           System.Process            (callCommand)
 
-import qualified Control.Monad.LLVM       as L
-import qualified LLVM.General.PassManager as P
-import qualified LLVM.General.Transforms  as T
+import qualified Control.Monad.LLVM        as L
+import qualified LLVM.General.PassManager  as P
+import qualified LLVM.General.Transforms   as T
 
-import           Language.Soiie.Emit      (emit)
-import           Language.Soiie.Lexer     (scan)
-import           Language.Soiie.Parser    (parseFile)
+import           Language.Soiie.Emit       (emit)
+import           Language.Soiie.ParseMonad (runParser)
+import           Language.Soiie.Parser     (parseFile)
 
 main :: IO ()
 main =
@@ -28,16 +28,17 @@ main =
       _     -> do n <- getProgName; error ("usage: " ++ n ++ " FILE [LIB]")
     file <- B.readFile inFile
 
+    ast <- case runParser parseFile inFile file of
+          Left e -> error (show e)
+          Right x -> return x
+    let llvmIr = emit inFile ast
+
     let root = case reverse inFile of
                  'e':'i':'s':'.':r -> reverse r
                  _                 -> error ("unknown file type: " ++ inFile)
         outFile = root ++ ".o"
     (asmFile, asmH) <- openTempFile "" (root ++ ".s")
     hClose asmH
-
-    let tokens = scan file
-        ast    = parseFile tokens
-        llvmIr = emit inFile ast
 
     res <- L.runL $ do
       c   <- L.context

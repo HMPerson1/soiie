@@ -4,11 +4,11 @@ module Language.Soiie.Parser
   )
 where
 
-import           Data.Sequence        (Seq, empty, singleton, (|>))
+import           Data.Sequence             (Seq, empty, singleton, (|>))
 
 import           Language.Soiie.AST
-import           Language.Soiie.Lexer (AlexPosn (..), Token (..),
-                                       TokenClass (..))
+import           Language.Soiie.Lexer
+import           Language.Soiie.ParseMonad
 }
 
 %token
@@ -40,6 +40,8 @@ import           Language.Soiie.Lexer (AlexPosn (..), Token (..),
   VAR           { Token _ (TokVarId $$) }
   INT           { Token _ (TokInt $$) }
 
+%monad { P }
+%lexer { (\c -> lexToken >>= c) } { Token _ TokEof }
 %tokentype { Token }
 
 %name parseFile file
@@ -119,5 +121,6 @@ varid :: { VarId }
         : VAR                           { VarId $1 }
 
 {
-happyError a = error ("Parse error near " ++ (case a of (Token (AlexPn _ l c) _ :_) -> '(' : show l ++ ':' : show c ++ ")"; [] -> "end of file"))
+happyError :: P a
+happyError = parseFail
 }

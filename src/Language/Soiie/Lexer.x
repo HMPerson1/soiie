@@ -1,17 +1,23 @@
 {
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Language.Soiie.Lexer
-  ( AlexPosn(..)
-  , Token(..)
-  , TokenClass(..)
-  , scan
+  ( lexToken
   )
 where
 
-import           Data.ByteString.Lazy.Char8 (ByteString, readInteger, unpack)
-import           Data.Maybe                 (fromJust)
-}
+import           Prelude                    hiding (take)
 
-%wrapper "posn-bytestring"
+import           Data.ByteString.Internal   (w2c)
+import           Data.ByteString.Lazy       (ByteString, take, uncons)
+import           Data.ByteString.Lazy.Char8 (readInteger, unpack)
+import           Data.Maybe                 (fromJust)
+import           Data.Word                  (Word8)
+
+import           Control.Monad.State
+
+import           Language.Soiie.ParseMonad
+}
 
 $white_no_nl = $white # [\n]
 
@@ -46,42 +52,34 @@ tokens :-
   [0-9]+             { tokRaw (TokInt . fst . fromJust . readInteger) }
 
 {
-tokRaw :: (ByteString -> TokenClass) -> AlexPosn -> ByteString -> Token
-tokRaw f pos bs = Token pos (f bs)
+tokRaw :: (ByteString -> TokenClass) -> SrcLoc -> ByteString -> Token
+tokRaw f loc bs = Token loc (f bs)
+tok :: TokenClass -> SrcLoc -> ByteString -> Token
 tok = tokRaw . const
 
-scan :: ByteString -> [Token]
-scan = alexScanTokens
+lexToken :: P Token
+lexToken =
+  do
+    inp1@(AI _ _ buf1 pos1) <- gets input
+    case alexScan inp1 0 of
+      AlexEOF -> do
+        l <- gets (loc . input)
+        return (Token l TokEof)
+      AlexError _ -> do
+        lexFail
+      AlexSkip inp2 _ -> do
+        modify (\s->s{input=inp2})
+        lexToken
+      AlexToken inp2@(AI loc2 _ _ pos2) _ act -> do
+        modify (\s->s{input=inp2})
+        return (act loc2 (take (pos2 - pos1) buf1))
 
-data Token = Token AlexPosn TokenClass
-  deriving (Show)
+alexInputPrevChar :: AlexInput -> Char
+alexInputPrevChar = prevChar
 
-data TokenClass = TokNewline
-                | TokParam
-                | TokVar
-                | TokIf
-                | TokThen
-                | TokElse
-                | TokWhile
-                | TokDo
-                | TokEnd
-                | TokPrint
-                | TokComma
-                | TokParenOpen
-                | TokParenClose
-                | TokAssign
-                | TokPlus
-                | TokMinus
-                | TokTimes
-                | TokDivide
-                | TokRem
-                | TokEQ
-                | TokNE
-                | TokLT
-                | TokLE
-                | TokGT
-                | TokGE
-                | TokInt        Integer
-                | TokVarId      String
-  deriving (Show)
+alexGetByte :: AlexInput -> Maybe (Word8,AlexInput)
+alexGetByte AI {loc,buf,pos} =
+  case uncons buf of
+    Nothing -> Nothing
+    Just (b,buf') -> let c = w2c b in Just (b, AI (advanceSrcLoc loc c) c buf' (pos+1))
 }

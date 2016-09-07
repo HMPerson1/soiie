@@ -3,8 +3,8 @@
 - [X] Parser
 - [X] LLVM Codegen
 - [X] Frontend
+- [X] Lexer/parser fusion
 - [ ] Pretty-printer
 - [ ] Tests
-- [ ] Lexer/parser fusion
 - [ ] Better error messages
 - [ ] Better frontend
